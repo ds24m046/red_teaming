@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from httpx import Client
 from abc import ABC, abstractmethod
 from typing import Self
 
@@ -19,6 +20,11 @@ class ChatSession(ABC):
 
 class EddiServer(ABC):
     """Lifecycle of a local EDDI instance."""
+
+    @property
+    @abstractmethod
+    def client(self) -> Client:
+        """HTTP client bound to the EDDI base URL."""
 
     @abstractmethod
     def start(self) -> None:

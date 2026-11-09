@@ -1,7 +1,6 @@
 from enum import StrEnum
 
 
-
 class Profile(StrEnum):
     WEAK = "weak"
     HARDENED = "hardened"

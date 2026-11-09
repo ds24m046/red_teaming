@@ -86,6 +86,8 @@ class ServerConfig(ConfigModel):
     startup_timeout_s: int = Field(default=120, gt=0)
     request_timeout_s: int = Field(default=60, gt=0)
     auth_token: str | None = None
+    compose_file: Path | None = None
+    compose_project: str = "skybook-gym"
 
 
 class GymConfig(ConfigModel):
