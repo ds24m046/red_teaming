@@ -1,7 +1,10 @@
+import os
 from typing import Self, Any
 
+from dotenv import load_dotenv
+
 from red_teaming.src.gym.base.abstract import ChatSession, EddiServer, GymEnvironment
-from red_teaming.src.gym.base.configs import AgentConfig, GroupConfig, GymConfig
+from red_teaming.src.gym.base.configs import AgentConfig, GroupConfig, GymConfig, SecretConfig
 from red_teaming.src.gym.implementations.session import AgentChatSession, GroupChatSession, _id_from_location
 
 
@@ -19,10 +22,13 @@ class EddiGymEnvironment(GymEnvironment):
     @classmethod
     def create(cls, config: GymConfig, server: EddiServer) -> Self:
         
+        load_dotenv()
         env = cls(config, server)
         server.start()
         
         try:
+            for secret in config.secrets:
+                env._store_secret(secret)
             for agent in config.agents:
                 env._agent_ids[agent.name] = env._create_agent(agent)
             for group in config.groups:
@@ -33,6 +39,21 @@ class EddiGymEnvironment(GymEnvironment):
             raise
         
         return env
+
+    def _store_secret(self, secret: SecretConfig) -> None:
+        
+        if secret.allowed_agents != ["*"]:
+            raise NotImplementedError("per-agent secret grants are not supported yet")
+        
+        payload = {
+            "value": secret.value,
+            "description": secret.description,
+            "allowedAgents": secret.allowed_agents,
+            "allowedHosts": secret.allowed_hosts,
+        } 
+        
+        response = self._server.client.put(f"/secretstore/secrets/default/{secret.name}", json=payload)
+        response.raise_for_status()
 
     def _create_agent(self, agent: AgentConfig) -> str:
         
@@ -54,8 +75,12 @@ class EddiGymEnvironment(GymEnvironment):
             "environment": "production",
         }
         
-        if agent.llm.api_key_vault_name:
-            body["vaultKeyName"] = agent.llm.api_key_vault_name
+        api_key = os.environ.get(agent.llm.api_key_env)
+        
+        if not api_key:
+            raise RuntimeError(f"environment variable {agent.llm.api_key_env} is not set (check .env)")
+        
+        body["apiKey"] = api_key
         
         response = self._server.client.post("/administration/agents/setup", json=body)
         response.raise_for_status()

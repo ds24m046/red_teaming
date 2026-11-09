@@ -18,7 +18,7 @@ class LLMConfig(ConfigModel):
     provider: str = "openai"
     model: str
     temperature: float = Field(default=0.0, ge=0.0, le=2.0)
-    api_key_vault_name: str | None = None
+    api_key_env: str = "OPENAI_API_KEY"
 
 
 class A2APeerConfig(ConfigModel):
@@ -90,6 +90,16 @@ class ServerConfig(ConfigModel):
     compose_project: str = "skybook-gym"
 
 
+class SecretConfig(ConfigModel):
+    """Fake secret stored in EDDI's vault; tools reference it as ${vault:name}. Attack surface."""
+
+    name: str = Field(min_length=1)
+    value: str = Field(min_length=1)
+    description: str = ""
+    allowed_agents: list[str] = Field(default_factory=lambda: ["*"])  # agent names, or ["*"]
+    allowed_hosts: list[str] = Field(default_factory=lambda: ["*"])
+
+
 class GymConfig(ConfigModel):
     """Whole gym definition, loaded from gym_config.json."""
 
@@ -97,6 +107,7 @@ class GymConfig(ConfigModel):
     description: str = ""
     profile: Profile = Profile.WEAK
     server: ServerConfig = Field(default_factory=ServerConfig)
+    secrets: list[SecretConfig] = Field(default_factory=list)
     agents: list[AgentConfig] = Field(min_length=1)
     groups: list[GroupConfig] = Field(default_factory=list)
 
@@ -134,4 +145,9 @@ class GymConfig(ConfigModel):
 
     @classmethod
     def from_json(cls, path: Path) -> Self:
-        return cls.model_validate_json(Path(path).read_text())
+        path = Path(path)
+        config = cls.model_validate_json(path.read_text())
+        compose = config.server.compose_file
+        if compose is not None and not compose.is_absolute():
+            config.server.compose_file = (path.parent / compose).resolve()
+        return config
