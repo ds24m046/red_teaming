@@ -20,9 +20,10 @@ class EddiGymEnvironment(GymEnvironment):
         self._sessions: list[ChatSession] = []
 
     @classmethod
-    def create(cls, config: GymConfig, server: EddiServer) -> Self:
+    def create(cls, dotenv_path: str, config: GymConfig, server: EddiServer) -> Self:
         
-        load_dotenv()
+        load_dotenv(dotenv_path)
+        
         env = cls(config, server)
         server.start()
         
@@ -53,6 +54,10 @@ class EddiGymEnvironment(GymEnvironment):
         } 
         
         response = self._server.client.put(f"/secretstore/secrets/default/{secret.name}", json=payload)
+
+        if response.status_code == 503:
+            raise RuntimeError("EDDI vault is disabled: set EDDI_VAULT_MASTER_KEY in .env")
+
         response.raise_for_status()
 
     def _create_agent(self, agent: AgentConfig) -> str:
@@ -69,8 +74,8 @@ class EddiGymEnvironment(GymEnvironment):
             "provider": agent.llm.provider,
             "model": agent.llm.model,
             "enableBuiltInTools": bool(agent.tools.builtin),
-            "builtInToolsWhitelist": agent.tools.builtin,
-            "mcpServerUrls": agent.tools.mcp_server_urls,
+            "builtInToolsWhitelist": ",".join(agent.tools.builtin),
+            "mcpServerUrls": ",".join(agent.tools.mcp_server_urls),
             "deploy": True,
             "environment": "production",
         }
@@ -81,9 +86,17 @@ class EddiGymEnvironment(GymEnvironment):
             raise RuntimeError(f"environment variable {agent.llm.api_key_env} is not set (check .env)")
         
         body["apiKey"] = api_key
+
+        base_url = agent.llm.base_url or (os.environ.get(agent.llm.base_url_env) if agent.llm.base_url_env else None)
+        if agent.llm.base_url_env and not base_url:
+            raise RuntimeError(f"environment variable {agent.llm.base_url_env} is not set (check .env)")
+        if base_url:
+            body["baseUrl"] = base_url
         
         response = self._server.client.post("/administration/agents/setup", json=body)
-        response.raise_for_status()
+        
+        if response.is_error:
+            raise RuntimeError(f"agent {agent.name!r} setup failed [{response.status_code}]: {response.text}")
         
         if "Location" in response.headers:
             return _id_from_location(response)
