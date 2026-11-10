@@ -29,6 +29,7 @@ class LocalEddiServer(EddiServer):
         subprocess.run(
             [
                 "docker", "compose",
+                "--progress", "quiet",
                 "-p", self._config.compose_project,
                 "-f", str(self._config.compose_file),
                 *args,
