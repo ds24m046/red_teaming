@@ -80,18 +80,17 @@ class EddiGymEnvironment(GymEnvironment):
             "environment": "production",
         }
         
-        api_key = os.environ.get(agent.llm.api_key_env)
+        api_key = os.environ.get(agent.llm.api_key_env, None)
+        base_url = os.environ.get(agent.llm.base_url_env, None)
         
         if not api_key:
             raise RuntimeError(f"environment variable {agent.llm.api_key_env} is not set (check .env)")
         
-        body["apiKey"] = api_key
-
-        base_url = agent.llm.base_url or (os.environ.get(agent.llm.base_url_env) if agent.llm.base_url_env else None)
-        if agent.llm.base_url_env and not base_url:
+        if not base_url:
             raise RuntimeError(f"environment variable {agent.llm.base_url_env} is not set (check .env)")
-        if base_url:
-            body["baseUrl"] = base_url
+        
+        body["apiKey"] = api_key
+        body["baseUrl"] = base_url
         
         response = self._server.client.post("/administration/agents/setup", json=body)
         
