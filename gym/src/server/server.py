@@ -1,13 +1,11 @@
 import time
 import subprocess
-
 from httpx import Client, TransportError
 
-from red_teaming.src.gym.base.abstract import EddiServer
-from red_teaming.src.gym.base.configs import ServerConfig
+from red_teaming.gym.src.server.config import ServerConfig
 
 
-class LocalEddiServer(EddiServer):
+class EddiServer:
 
     def __init__(self, config: ServerConfig) -> None:
     

@@ -1,22 +1,12 @@
 import json
 import uuid
+from httpx import Client
 
-from httpx import Client, Response
-
-from red_teaming.src.gym.base.abstract import ChatSession
-from red_teaming.src.gym.base.enums import ConversationState
-from red_teaming.src.gym.base.models import ChatReply, ChatRequest
+from red_teaming.gym.src.session.models import ChatReply, ChatRequest, ConversationState
+from red_teaming.gym.src.session.utils import id_from_location
 
 
-def _id_from_location(response: Response) -> str:
-    
-    location = response.headers["Location"]
-    uid = location.rstrip("/").rsplit("/", 1)[-1]
-    
-    return uid
-
-
-class AgentChatSession(ChatSession):
+class AgentChatSession:
 
     def __init__(
         self,
@@ -32,12 +22,13 @@ class AgentChatSession(ChatSession):
         response = self._client.post(f"/agents/{agent_id}/start", params={"environment": environment, "userId": user_id})
         response.raise_for_status()
         
-        self._conversation_id = _id_from_location(response)
+        self._conversation_id = id_from_location(response)
 
     def _parse_response(self, response: dict) -> list[str]:
           
         texts = []
-        for entry in response.get("conversationOutputs", [])[-1:]:          
+        for entry in response.get("conversationOutputs", [])[-1:]:
+             
             for item in entry.get("output", []):
                 if isinstance(item, dict) and item.get("text"):
                     texts.append(item["text"])
@@ -68,7 +59,7 @@ class AgentChatSession(ChatSession):
         self._client.post(f"/agents/{self._conversation_id}/endConversation")
 
 
-class GroupChatSession(ChatSession):
+class GroupChatSession:
 
     def __init__(self, client: Client, group_id: str) -> None:
         

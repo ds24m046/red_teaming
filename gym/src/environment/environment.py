@@ -1,24 +1,24 @@
 import os
 from typing import Self, Any
-
 from dotenv import load_dotenv
 
-from red_teaming.src.gym.base.abstract import ChatSession, EddiServer, GymEnvironment
-from red_teaming.src.gym.base.configs import AgentConfig, GroupConfig, GymConfig, SecretConfig
-from red_teaming.src.gym.implementations.session import AgentChatSession, GroupChatSession, _id_from_location
+from red_teaming.gym.src.server.server import EddiServer
+from red_teaming.gym.src.session.session import AgentChatSession, GroupChatSession
+from red_teaming.gym.src.environment.config import AgentConfig, GroupConfig, GymConfig, SecretConfig
+from red_teaming.gym.src.session.utils import id_from_location
 
 
-class EddiGymEnvironment(GymEnvironment):
+class GymEnvironment:
     
     def __init__(self, config: GymConfig, server: EddiServer):
         
         self._config = config
         self._server = server
         
-        self._agent_ids: dict[str, str] = {}
-        self._group_ids: dict[str, str] = {}
-        self._sessions: list[ChatSession] = []
-
+        self._agent_ids = {}
+        self._group_ids = {}
+        self._sessions = []
+    
     @classmethod
     def create(cls, dotenv_path: str, config: GymConfig, server: EddiServer) -> Self:
         
@@ -98,7 +98,7 @@ class EddiGymEnvironment(GymEnvironment):
             raise RuntimeError(f"agent {agent.name!r} setup failed [{response.status_code}]: {response.text}")
         
         if "Location" in response.headers:
-            return _id_from_location(response)
+            return id_from_location(response)
         
         return response.json()["agentId"]
 
@@ -114,6 +114,8 @@ class EddiGymEnvironment(GymEnvironment):
             }
             
             members.append(member)
+            
+        return members
     
     def _get_protocol(self, group: GroupConfig) -> dict[str, Any]:
         
@@ -143,9 +145,9 @@ class EddiGymEnvironment(GymEnvironment):
         response = self._server.client.post("/groupstore/groups", json=body)
         response.raise_for_status()
         
-        return _id_from_location(response)
+        return id_from_location(response)
 
-    def chat(self, target: str) -> ChatSession:
+    def chat(self, target: str) -> AgentChatSession | GroupChatSession:
         
         client = self._server.client
         

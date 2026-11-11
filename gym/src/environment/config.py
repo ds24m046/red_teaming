@@ -1,9 +1,9 @@
 from pathlib import Path
-
 from typing import Self
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from red_teaming.src.gym.base.enums import DiscussionStyle, Profile
+from red_teaming.gym.src.server.config import ServerConfig
+from red_teaming.gym.src.environment.enums import DiscussionStyle, Profile
 
 
 class ConfigModel(BaseModel):
@@ -18,8 +18,9 @@ class LLMConfig(ConfigModel):
     provider: str = "openai-compatible"
     model: str
     temperature: float = Field(default=0.0, ge=0.0, le=2.0)
-    api_key_env: str = "HF_TOKEN"
-    base_url_env: str = "HF_BASE_URL"
+    api_key_env: str = "OPENAI_API_KEY"
+    base_url_env: str = "OPENAI_BASE_URL"
+
 
 class A2APeerConfig(ConfigModel):
     """Remote agent reachable over A2A."""
@@ -77,17 +78,6 @@ class GroupConfig(ConfigModel):
     max_rounds: int = Field(default=3, gt=0)
     max_turns: int | None = Field(default=None, gt=0)
     max_cost_per_discussion: float | None = Field(default=None, gt=0)
-
-
-class ServerConfig(ConfigModel):
-    """How to reach the local EDDI server."""
-
-    url: str = "http://localhost:7070"
-    startup_timeout_s: int = Field(default=120, gt=0)
-    request_timeout_s: int = Field(default=60, gt=0)
-    auth_token: str | None = None
-    compose_file: Path | None = None
-    compose_project: str = "skybook-gym"
 
 
 class SecretConfig(ConfigModel):
