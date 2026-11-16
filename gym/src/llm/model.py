@@ -1,6 +1,4 @@
 import os
-
-from dotenv.main import logger
 from openai import AzureOpenAI
 from dotenv import load_dotenv
 from pydantic import BaseModel, ValidationError
@@ -9,10 +7,7 @@ from typing import Optional, Type, Union, List, Dict
 
 class OpenAIModel:
     
-    def __init__(
-        self,
-        dotenv_path: str = ".env",
-    ):
+    def __init__(self, dotenv_path: str = ".env"):
     
         super().__init__()
         
@@ -20,7 +15,6 @@ class OpenAIModel:
         print(f"Loaded .env file: {is_loaded}")
         
         self.api_key = os.environ["OPENAI_API_KEY"]
-        self.model_name = os.environ["OPENAI_MODEL"]
         self.endpoint = os.environ["OPENAI_BASE_URL"]
         self.deployment = os.environ["OPENAI_DEPLOYMENT"]
         self.version = os.environ["OPENAI_VERSION"]
