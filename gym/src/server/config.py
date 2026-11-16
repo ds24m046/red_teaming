@@ -1,10 +1,11 @@
 from pathlib import Path
-from pydantic import BaseModel, Field, ConfigDict
+
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class ServerConfig(BaseModel):
     """How to reach the local EDDI server."""
-    
+
     model_config = ConfigDict(extra="forbid")
 
     url: str = "http://localhost:7070"

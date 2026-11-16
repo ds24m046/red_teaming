@@ -11,5 +11,3 @@ class DiscussionStyle(StrEnum):
     PEER_REVIEW = "PEER_REVIEW"
     DEBATE = "DEBATE"
     TASK_FORCE = "TASK_FORCE"
-
-

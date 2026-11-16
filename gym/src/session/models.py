@@ -1,6 +1,6 @@
 from typing import Any
+
 from pydantic import BaseModel, Field
-    
 from red_teaming.gym.src.session.enums import ConversationState
 
 

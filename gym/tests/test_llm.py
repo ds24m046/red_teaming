@@ -1,6 +1,8 @@
 import os
 import json
 import unittest
+import httpx
+from openai import APIError
 from unittest.mock import patch
 from types import SimpleNamespace
 from pydantic import BaseModel
@@ -182,10 +184,14 @@ class TestOpenAIModel(unittest.TestCase):
 
     def test_call_handles_api_exception(self):
         
-        self.mock_client.chat.completions.create.side_effect = (
-            Exception("API error")
+        error = APIError(
+            message="API error",
+            request= httpx.Request("POST", "https://example.com"),
+            body=None,
         )
-
+        
+        self.mock_client.chat.completions.create.side_effect = error
+        
         response = self.model._call("Hello")
 
         self.assertIsNone(response)
@@ -209,6 +215,7 @@ class TestOpenAIModel(unittest.TestCase):
         )
 
     def test_call_model_without_history(self):
+        
         self.model.add_message("user", "Previous question")
 
         self.mock_client.chat.completions.create.return_value = (
@@ -267,10 +274,14 @@ class TestOpenAIModel(unittest.TestCase):
 
     def test_call_model_returns_none_on_api_error(self):
         
-        self.mock_client.chat.completions.create.side_effect = (
-            Exception("API error")
+        error = APIError(
+            message="API error",
+            request= httpx.Request("POST", "https://example.com"),
+            body=None,
         )
-
+        
+        self.mock_client.chat.completions.create.side_effect = error
+        
         response = self.model.call_model("Hello")
 
         self.assertIsNone(response)

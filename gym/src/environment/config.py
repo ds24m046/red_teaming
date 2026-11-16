@@ -1,9 +1,9 @@
 from pathlib import Path
 from typing import Self
-from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from red_teaming.gym.src.server.config import ServerConfig
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 from red_teaming.gym.src.environment.enums import DiscussionStyle, Profile
+from red_teaming.gym.src.server.config import ServerConfig
 
 
 class ConfigModel(BaseModel):
@@ -103,45 +103,46 @@ class GymConfig(ConfigModel):
 
     @model_validator(mode="after")
     def _check_references(self) -> Self:
-        
+
         agent_names = [a.name for a in self.agents]
-        
+
         if len(set(agent_names)) != len(agent_names):
             raise ValueError("agent names must be unique")
-        
+
         group_names = [g.name for g in self.groups]
-        
+
         if len(set(group_names)) != len(group_names):
             raise ValueError("group names must be unique")
-        
+
         if set(agent_names) & set(group_names):
             raise ValueError("agent and group names must not overlap (chat targets)")
-        
+
         known = set(agent_names)
-        
+
         for group in self.groups:
-        
             refs = [m.agent for m in group.members]
-        
+
             if group.moderator:
                 refs.append(group.moderator)
-        
+
             missing = set(refs) - known
-        
+
             if missing:
-                raise ValueError(f"group {group.name!r} references unknown agents: {sorted(missing)}")
-        
+                raise ValueError(
+                    f"group {group.name!r} references unknown agents: {sorted(missing)}"
+                )
+
         return self
 
     @classmethod
     def from_json(cls, path: Path) -> Self:
-        
+
         path = Path(path)
-        
+
         config = cls.model_validate_json(path.read_text())
         compose = config.server.compose_file
-        
+
         if compose is not None and not compose.is_absolute():
             config.server.compose_file = (path.parent / compose).resolve()
-        
+
         return config
