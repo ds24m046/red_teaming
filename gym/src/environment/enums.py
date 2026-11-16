@@ -11,11 +11,3 @@ class DiscussionStyle(StrEnum):
     PEER_REVIEW = "PEER_REVIEW"
     DEBATE = "DEBATE"
     TASK_FORCE = "TASK_FORCE"
-
-
-class ConversationState(StrEnum):
-    READY = "READY"
-    IN_PROGRESS = "IN_PROGRESS"
-    AWAITING_HUMAN = "AWAITING_HUMAN"
-    ENDED = "ENDED"
-    ERROR = "ERROR"

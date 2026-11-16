@@ -6,7 +6,7 @@
         "url": "http://localhost:7070",
         "startup_timeout_s": 180,
         "request_timeout_s": 120,
-        "compose_file": "../../../../eddi/docker-compose.yml",
+        "compose_file": "/home/ykolesnyk/Desktop/study/fhtw/thesis/eddi/docker-compose.yml",
         "compose_project": "skybook-gym"
     },
     "agents": [
