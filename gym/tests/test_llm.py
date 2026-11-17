@@ -7,7 +7,7 @@ from unittest.mock import patch
 from types import SimpleNamespace
 from pydantic import BaseModel
 
-from red_teaming.gym.src.llm.model import OpenAIModel
+from red_teaming.gym.src.servers.llm import OpenAIModel
 
 
 class TestResponse(BaseModel):

@@ -1,13 +1,10 @@
 from pathlib import Path
+from pydantic import Field
 
-from pydantic import BaseModel, ConfigDict, Field
+from red_teaming.gym.base import BaseConfig
 
 
-class ServerConfig(BaseModel):
-    """How to reach the local EDDI server."""
-
-    model_config = ConfigDict(extra="forbid")
-
+class EddiServerConfig(BaseConfig):
     url: str = "http://localhost:7070"
     startup_timeout_s: int = Field(default=120, gt=0)
     request_timeout_s: int = Field(default=60, gt=0)

@@ -1,47 +1,32 @@
-import logging
 import os
-from typing import Any, Self
+import uuid
+import logging
+from typing import Any
 
-from dotenv import load_dotenv
-from red_teaming.gym.src.environment.config import AgentConfig, GroupConfig, GymConfig, SecretConfig
-from red_teaming.gym.src.server.server import EddiServer
-from red_teaming.gym.src.session.session import AgentChatSession, GroupChatSession
-from red_teaming.gym.src.session.utils import id_from_location
+from red_teaming.gym.src.utils import id_from_location
+from red_teaming.gym.src.servers.eddi import EddiServer
+from red_teaming.gym.src.sessions.agent import AgentSession
+from red_teaming.gym.src.sessions.group import GroupSession
+from red_teaming.gym.base import BaseEnvironment, BaseSession
+from red_teaming.gym.configs.environments.eddi import EddiEnvironmentConfig
+from red_teaming.gym.configs.components.agent import AgentConfig
+from red_teaming.gym.configs.components.group import GroupConfig
+from red_teaming.gym.configs.components.secret import SecretConfig
+
 
 logger = logging.getLogger(__name__)
 
+class EddiEnvironment(BaseEnvironment):
 
-class GymEnvironment:
-    def __init__(self, config: GymConfig, server: EddiServer):
+    def __init__(self, config: EddiEnvironmentConfig):
+        
+        self.config = config
+        self.server = None
 
-        self._config = config
-        self._server = server
-
-        self._agent_ids = {}
-        self._group_ids = {}
-        self._sessions = []
-
-    @classmethod
-    def create(cls, dotenv_path: str, config: GymConfig, server: EddiServer) -> Self:
-
-        load_dotenv(dotenv_path)
-
-        env = cls(config, server)
-        server.start()
-
-        try:
-            for secret in config.secrets:
-                env._store_secret(secret)
-            for agent in config.agents:
-                env._agent_ids[agent.name] = env._create_agent(agent)
-            for group in config.groups:
-                env._group_ids[group.name] = env._create_group(group)
-
-        except Exception:
-            server.destroy()
-            raise
-
-        return env
+        self._id = None
+        self._agent_ids: dict[str, str] = {}
+        self._group_ids: dict[str, str] = {}
+        self._sessions: list[BaseSession] = []
 
     def _store_secret(self, secret: SecretConfig) -> None:
 
@@ -55,9 +40,7 @@ class GymEnvironment:
             "allowedHosts": secret.allowed_hosts,
         }
 
-        response = self._server.client.put(
-            f"/secretstore/secrets/default/{secret.name}", json=payload
-        )
+        response = self.server.client.put(f"/secretstore/secrets/default/{secret.name}", json=payload)
 
         if response.status_code == 503:
             raise RuntimeError("EDDI vault is disabled: set EDDI_VAULT_MASTER_KEY in .env")
@@ -88,28 +71,13 @@ class GymEnvironment:
             "environment": "production",
         }
 
-        api_key = os.environ.get(agent.llm.api_key_env, None)
-        base_url = os.environ.get(agent.llm.base_url_env, None)
+        body["apiKey"] = os.environ[agent.llm.openai_api_key]
+        body["baseUrl"] = os.environ[agent.llm.openai_base_url]
 
-        if not api_key:
-            raise RuntimeError(
-                f"environment variable {agent.llm.api_key_env} is not set (check .env)"
-            )
-
-        if not base_url:
-            raise RuntimeError(
-                f"environment variable {agent.llm.base_url_env} is not set (check .env)"
-            )
-
-        body["apiKey"] = api_key
-        body["baseUrl"] = base_url
-
-        response = self._server.client.post("/administration/agents/setup", json=body)
+        response = self.server.client.post("/administration/agents/setup", json=body)
 
         if response.is_error:
-            raise RuntimeError(
-                f"agent {agent.name!r} setup failed [{response.status_code}]: {response.text}"
-            )
+            raise RuntimeError(f"agent {agent.name!r} setup failed [{response.status_code}]: {response.text}")
 
         if "Location" in response.headers:
             return id_from_location(response)
@@ -120,6 +88,7 @@ class GymEnvironment:
 
         members = []
         for m in group.members:
+            
             member = {
                 "agentId": self._agent_ids[m.agent],
                 "displayName": m.display_name or m.agent,
@@ -155,34 +124,74 @@ class GymEnvironment:
         if group.moderator:
             body["moderatorAgentId"] = self._agent_ids[group.moderator]
 
-        response = self._server.client.post("/groupstore/groups", json=body)
+        response = self.server.client.post("/groupstore/groups", json=body)
         response.raise_for_status()
 
         return id_from_location(response)
+    
+    def create(self) -> "EddiEnvironment":
+        
+        self._id = str(uuid.uuid4())
+        self.server = EddiServer(self.config.server)
 
-    def chat(self, target: str) -> AgentChatSession | GroupChatSession:
+        try:
+            self.server.start()
 
-        client = self._server.client
+            for secret in self.config.secrets:
+                self._store_secret(secret)
+
+            for agent in self.config.agents:
+                self._agent_ids[agent.name] = self._create_agent(agent)
+
+            for group in self.config.groups:
+                self._group_ids[group.name] = self._create_group(group)
+
+        except Exception:
+            self.server.destroy()
+            self.server = None
+            
+            self._id = None
+            self._agent_ids.clear()
+            self._group_ids.clear()
+            
+            raise
+
+        return self
+
+    def chat(self, target: str) -> BaseSession:
+        
+        if self.server is None:
+            raise RuntimeError("Environment has not been created")
+
+        client = self.server.client
 
         if target in self._agent_ids:
-            session = AgentChatSession(client, self._agent_ids[target])
+            session = AgentSession(client, self._agent_ids[target])
         elif target in self._group_ids:
-            session = GroupChatSession(client, self._group_ids[target])
+            session = GroupSession(client, self._group_ids[target])
         else:
-            raise KeyError(f"unknown chat target {target!r}")
+            raise KeyError(f"Unknown chat target: {target!r}")
 
         self._sessions.append(session)
-
+        
         return session
 
     def close(self) -> None:
-
+        
         try:
             for session in self._sessions:
                 try:
                     session.close()
                 except Exception:
                     logger.exception("Failed to close session")
-
+        
         finally:
-            self._server.destroy()
+            
+            if self.server is not None:
+                self.server.destroy()
+                self.server = None
+
+            self._id = None
+            self._sessions.clear()
+            self._agent_ids.clear()
+            self._group_ids.clear()
