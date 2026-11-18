@@ -1,0 +1,70 @@
+import subprocess
+import time
+
+from httpx import Client, TransportError
+from red_teaming.gym.base import BaseServer
+from red_teaming.gym.configs.models.environments.eddi import EddiServerConfig
+
+
+class EddiServer(BaseServer):
+    def __init__(self, config: EddiServerConfig) -> None:
+
+        headers = {"Authorization": f"Bearer {config.auth_token}"} if config.auth_token else {}
+
+        self._config = config
+        self._client = Client(
+            base_url=config.url, timeout=config.request_timeout_s, headers=headers
+        )
+
+    def _compose(self, *args: str) -> None:
+
+        if self._config.compose_file is None:
+            raise RuntimeError("Docker Compose file is not configured")
+
+        subprocess.run(
+            [
+                "docker",
+                "compose",
+                "--progress",
+                "quiet",
+                "-p",
+                self._config.compose_project,
+                "-f",
+                str(self._config.compose_file),
+                *args,
+            ],
+            check=True,
+        )
+
+    def _wait_until_ready(self) -> None:
+
+        deadline = time.monotonic() + self._config.startup_timeout_s
+
+        while time.monotonic() < deadline:
+            try:
+                if self._client.get("/").status_code < 500:
+                    return
+            except TransportError:
+                pass
+
+            time.sleep(2)
+
+        raise TimeoutError(f"EDDI not reachable at {self._config.url}")
+
+    @property
+    def client(self) -> Client:
+        return self._client
+
+    def start(self) -> None:
+
+        if self._config.compose_file is not None:
+            self._compose("up", "-d")
+
+        self._wait_until_ready()
+
+    def destroy(self) -> None:
+
+        self._client.close()
+
+        if self._config.compose_file is not None:
+            self._compose("down", "-v")

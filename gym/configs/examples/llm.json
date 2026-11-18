@@ -1,0 +1,8 @@
+{
+  "name": "LLM Baseline",
+  "description": "Direct interaction with GPT-5-mini",
+  "environment": "llm",
+  "config": {
+    "system_prompt": "You are a helpful assistant. Answer questions accurately and concisely."
+  }
+}
