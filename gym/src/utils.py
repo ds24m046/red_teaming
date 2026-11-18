@@ -1,5 +1,6 @@
-from httpx import Response
 from urllib.parse import urlparse
+
+from httpx import Response
 
 
 def id_from_location(response: Response) -> str:
@@ -8,8 +9,8 @@ def id_from_location(response: Response) -> str:
     parsed = urlparse(location)
 
     uid = parsed.path.rstrip("/").split("/")[-1]
-    
+
     if not uid:
         raise ValueError("Location header does not contain an ID")
-    
+
     return uid

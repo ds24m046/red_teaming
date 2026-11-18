@@ -1,5 +1,4 @@
 from pydantic import Field
-
 from red_teaming.gym.base import BaseConfig
 from red_teaming.gym.enums import DiscussionStyle
 

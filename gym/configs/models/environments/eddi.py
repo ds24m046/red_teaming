@@ -1,12 +1,12 @@
 from typing import Self
-from pydantic import Field, model_validator
 
-from red_teaming.gym.enums import Profile
+from pydantic import Field, model_validator
 from red_teaming.gym.base import BaseConfig
-from red_teaming.gym.configs.models.servers.eddi import EddiServerConfig
 from red_teaming.gym.configs.models.components.agent import AgentConfig
 from red_teaming.gym.configs.models.components.group import GroupConfig
 from red_teaming.gym.configs.models.components.secret import SecretConfig
+from red_teaming.gym.configs.models.servers.eddi import EddiServerConfig
+from red_teaming.gym.enums import Profile
 
 
 class EddiEnvironmentConfig(BaseConfig):
@@ -43,6 +43,8 @@ class EddiEnvironmentConfig(BaseConfig):
             missing = set(refs) - known
 
             if missing:
-                raise ValueError(f"group {group.name!r} references unknown agents: {sorted(missing)}")
-        
+                raise ValueError(
+                    f"group {group.name!r} references unknown agents: {sorted(missing)}"
+                )
+
         return self

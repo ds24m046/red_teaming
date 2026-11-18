@@ -1,25 +1,24 @@
+import logging
 import os
 import uuid
-import logging
 from typing import Any
 
-from red_teaming.gym.src.utils import id_from_location
-from red_teaming.gym.src.servers.eddi import EddiServer
-from red_teaming.gym.src.sessions.agent import AgentSession
-from red_teaming.gym.src.sessions.group import GroupSession
 from red_teaming.gym.base import BaseEnvironment, BaseSession
-from red_teaming.gym.configs.models.environments.eddi import EddiEnvironmentConfig
 from red_teaming.gym.configs.models.components.agent import AgentConfig
 from red_teaming.gym.configs.models.components.group import GroupConfig
 from red_teaming.gym.configs.models.components.secret import SecretConfig
-
+from red_teaming.gym.configs.models.environments.eddi import EddiEnvironmentConfig
+from red_teaming.gym.src.servers.eddi import EddiServer
+from red_teaming.gym.src.sessions.agent import AgentSession
+from red_teaming.gym.src.sessions.group import GroupSession
+from red_teaming.gym.src.utils import id_from_location
 
 logger = logging.getLogger(__name__)
 
-class EddiEnvironment(BaseEnvironment):
 
+class EddiEnvironment(BaseEnvironment):
     def __init__(self, config: EddiEnvironmentConfig):
-        
+
         self.config = config
         self.server = None
 
@@ -40,7 +39,9 @@ class EddiEnvironment(BaseEnvironment):
             "allowedHosts": secret.allowed_hosts,
         }
 
-        response = self.server.client.put(f"/secretstore/secrets/default/{secret.name}", json=payload)
+        response = self.server.client.put(
+            f"/secretstore/secrets/default/{secret.name}", json=payload
+        )
 
         if response.status_code == 503:
             raise RuntimeError("EDDI vault is disabled: set EDDI_VAULT_MASTER_KEY in .env")
@@ -77,7 +78,9 @@ class EddiEnvironment(BaseEnvironment):
         response = self.server.client.post("/administration/agents/setup", json=body)
 
         if response.is_error:
-            raise RuntimeError(f"agent {agent.name!r} setup failed [{response.status_code}]: {response.text}")
+            raise RuntimeError(
+                f"agent {agent.name!r} setup failed [{response.status_code}]: {response.text}"
+            )
 
         if "Location" in response.headers:
             return id_from_location(response)
@@ -88,7 +91,6 @@ class EddiEnvironment(BaseEnvironment):
 
         members = []
         for m in group.members:
-            
             member = {
                 "agentId": self._agent_ids[m.agent],
                 "displayName": m.display_name or m.agent,
@@ -128,9 +130,9 @@ class EddiEnvironment(BaseEnvironment):
         response.raise_for_status()
 
         return id_from_location(response)
-    
+
     def create(self) -> "EddiEnvironment":
-        
+
         self._id = str(uuid.uuid4())
         self.server = EddiServer(self.config.server)
 
@@ -149,17 +151,17 @@ class EddiEnvironment(BaseEnvironment):
         except Exception:
             self.server.destroy()
             self.server = None
-            
+
             self._id = None
             self._agent_ids.clear()
             self._group_ids.clear()
-            
+
             raise
 
         return self
 
     def chat(self, target: str) -> BaseSession:
-        
+
         if self.server is None:
             raise RuntimeError("Environment has not been created")
 
@@ -173,20 +175,19 @@ class EddiEnvironment(BaseEnvironment):
             raise KeyError(f"Unknown chat target: {target!r}")
 
         self._sessions.append(session)
-        
+
         return session
 
     def close(self) -> None:
-        
+
         try:
             for session in self._sessions:
                 try:
                     session.close()
                 except Exception:
                     logger.exception("Failed to close session")
-        
+
         finally:
-            
             if self.server is not None:
                 self.server.destroy()
                 self.server = None

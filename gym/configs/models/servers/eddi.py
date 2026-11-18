@@ -1,6 +1,6 @@
 from pathlib import Path
-from pydantic import Field
 
+from pydantic import Field
 from red_teaming.gym.base import BaseConfig
 
 

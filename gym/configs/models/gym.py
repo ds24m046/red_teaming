@@ -1,11 +1,11 @@
 import copy
 from typing import Any
-from pydantic import model_validator
 
+from pydantic import model_validator
 from red_teaming.gym.base import BaseConfig
-from red_teaming.gym.enums import EnvironmentType
-from red_teaming.gym.configs.models.environments.llm import LLMEnvironmentConfig
 from red_teaming.gym.configs.models.environments.eddi import EddiEnvironmentConfig
+from red_teaming.gym.configs.models.environments.llm import LLMEnvironmentConfig
+from red_teaming.gym.enums import EnvironmentType
 
 
 class GymConfig(BaseConfig):
@@ -13,7 +13,7 @@ class GymConfig(BaseConfig):
     description: str
     environment: EnvironmentType
     config: LLMEnvironmentConfig | EddiEnvironmentConfig
-    
+
     @model_validator(mode="before")
     @classmethod
     def select_environment_config(cls, data: Any) -> Any:
@@ -28,7 +28,7 @@ class GymConfig(BaseConfig):
             return data
 
         data = copy.deepcopy(data)
-        
+
         if environment == EnvironmentType.LLM or environment == EnvironmentType.LLM.value:
             data["config"] = LLMEnvironmentConfig.model_validate(config)
 

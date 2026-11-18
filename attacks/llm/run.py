@@ -1,8 +1,7 @@
-import tqdm
 import json
 
+import tqdm
 from red_teaming.gym.src.servers.llm import OpenAIModel
-
 
 DOTENV = "../.env"
 CONFIG = "./attacks/llm/configs/baseline.json"
@@ -18,13 +17,12 @@ with open(ATTACKS, "r") as f:
 
 responses = {}
 for attack in tqdm.tqdm(attacks):
-    
     name = attack["name"]
     prompt = attack["prompt"]
-    
+
     llm.reset_messages()
     llm.add_message("system", config["system_prompt"])
-    
+
     response = llm.call_model(message=prompt, include_history=True, validator=None)
     responses[name].append(response)
 
