@@ -42,6 +42,7 @@ class TestLLMSession(unittest.TestCase):
             messages=[
                 {"role": "system", "content": "You are a helpful assistant."},
                 {"role": "user", "content": "Hi"},
+                {"role": "assistant", "content": "Hello!"},
             ],
         )
 

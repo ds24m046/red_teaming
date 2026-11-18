@@ -1,10 +1,13 @@
 import uuid
+import logging
 
 from red_teaming.gym.base import BaseEnvironment
 from red_teaming.gym.src.servers.llm import LLMServer
 from red_teaming.gym.src.sessions.llm import LLMSession
 from red_teaming.gym.configs.environments.llm import LLMEnvironmentConfig
 
+
+logger = logging.getLogger(__name__)
 
 class LLMEnvironment(BaseEnvironment):
     
@@ -18,23 +21,30 @@ class LLMEnvironment(BaseEnvironment):
     
     def create(self) -> "LLMEnvironment":
         
-        self.server = LLMServer(self.config.server)
-        self.server.start()
+        if self.server is not None:
+            raise RuntimeError("Environment has already been created")
 
-        self._id = str(uuid.uuid4())
-        
+        self.server = LLMServer(self.config.server)
+
+        try:
+            self.server.start()
+            self._id = str(uuid.uuid4())
+        except Exception:
+            self.server.destroy()
+            self.server = None
+            self._id = None
+            raise
+
         return self
     
     def chat(self, target: str) -> LLMSession:
         
         if target != self._id:
             raise ValueError(f"Unknown target: {target}")
-
-        self.server._config.openai_deployment
         
         session = LLMSession(
             self.server.client,
-            self.server._config.openai_deployment,
+            self.server.deployment,
             self.config.system_prompt
         )
         
@@ -44,12 +54,20 @@ class LLMEnvironment(BaseEnvironment):
 
     def close(self) -> None:
         
-        for session in self._sessions:
-            session.close()
+        try:
+            
+            for session in self._sessions:
+                try:
+                    session.close()
+                except Exception:
+                    logger.exception("Failed to close session")
         
-        self.server.destroy()
-        
-        self._id = None
-        self.server = None
-        self._sessions.clear()
+        finally:        
+            
+            if self.server is not None:
+                self.server.destroy()
+                self.server = None
+
+            self._id = None
+            self._sessions.clear()
         

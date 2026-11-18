@@ -16,20 +16,15 @@ class EddiServer(BaseServer):
         self._client = Client(base_url=config.url, timeout=config.request_timeout_s, headers=headers)
     
     def _compose(self, *args: str) -> None:
-
-        assert self._config.compose_file is not None
-        assert self._config.compose_project is not None
+        
+        if self._config.compose_file is None:
+            raise RuntimeError("Docker Compose file is not configured")
 
         subprocess.run(
             [
-                "docker",
-                "compose",
-                "--progress",
-                "quiet",
-                "-p",
-                self._config.compose_project,
-                "-f",
-                str(self._config.compose_file),
+                "docker", "compose", "--progress", "quiet",
+                "-p", self._config.compose_project,
+                "-f", str(self._config.compose_file),
                 *args,
             ],
             check=True,

@@ -15,6 +15,11 @@ class LLMServer(BaseServer):
         
         self._config = LLMServerConfig.model_validate(config)
         self._client = None
+        
+    @property
+    def deployment(self) -> str:
+        
+        return self._config.openai_deployment
     
     @property
     def client(self) -> AzureOpenAI:

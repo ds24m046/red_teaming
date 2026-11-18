@@ -250,6 +250,9 @@ class TestEddiEnvironment(unittest.TestCase):
         self.assertIn(session, self.env._sessions)
 
     def test_chat_unknown_target(self):
+        
+        self.env.server = MagicMock()
+        
         with self.assertRaises(KeyError):
             self.env.chat("unknown")
 
@@ -268,12 +271,12 @@ class TestEddiEnvironment(unittest.TestCase):
         self.env.close()
 
         session.close.assert_called_once()
-        self.env.server  # server reference is cleared below
+        self.env.server
         server_class.return_value.destroy.assert_called_once()
         self.assertIsNone(self.env.server)
         self.assertEqual(self.env._sessions, [])
         self.assertEqual(self.env._agent_ids, {})
-        self.assertEqual(self.env._group_ids, [])
+        self.assertEqual(self.env._group_ids, {})
 
     @patch(f"{MODULE}.EddiServer")
     def test_close_continues_after_session_error(self, server_class):

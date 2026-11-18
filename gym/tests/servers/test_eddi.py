@@ -65,10 +65,11 @@ class TestEddiServer(unittest.TestCase):
 
     @patch(f"{MODULE}.subprocess.run")
     def test_compose_without_compose_file(self, mock_run):
+        
         config = self.config.model_copy(update={"compose_file": None})
         server = EddiServer(config)
 
-        with self.assertRaisesRegex(RuntimeError, "compose file"):
+        with self.assertRaisesRegex(RuntimeError, "Docker Compose file is not configured"):
             server._compose("up", "-d")
 
         mock_run.assert_not_called()
@@ -151,6 +152,7 @@ class TestEddiServer(unittest.TestCase):
 
     @patch(f"{MODULE}.subprocess.run")
     def test_destroy_without_compose(self, mock_run):
+        
         config = self.config.model_copy(update={"compose_file": None})
         server = EddiServer(config)
 
