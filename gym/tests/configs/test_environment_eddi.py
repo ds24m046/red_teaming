@@ -2,11 +2,11 @@ import unittest
 from pydantic import ValidationError
 
 from red_teaming.gym.enums import DiscussionStyle
-from red_teaming.gym.configs.environments.eddi import EddiEnvironmentConfig
-from red_teaming.gym.configs.components.agent import AgentConfig
-from red_teaming.gym.configs.components.group import GroupConfig
-from red_teaming.gym.configs.components.group import GroupMemberConfig
-from red_teaming.gym.configs.components.agent import LLMConfig
+from red_teaming.gym.configs.models.environments.eddi import EddiEnvironmentConfig
+from red_teaming.gym.configs.models.components.agent import AgentConfig
+from red_teaming.gym.configs.models.components.group import GroupConfig
+from red_teaming.gym.configs.models.components.group import GroupMemberConfig
+from red_teaming.gym.configs.models.components.agent import LLMConfig
 
 
 class TestEddiEnvironmentConfig(unittest.TestCase):

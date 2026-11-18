@@ -4,7 +4,7 @@ import logging
 from red_teaming.gym.base import BaseEnvironment
 from red_teaming.gym.src.servers.llm import LLMServer
 from red_teaming.gym.src.sessions.llm import LLMSession
-from red_teaming.gym.configs.environments.llm import LLMEnvironmentConfig
+from red_teaming.gym.configs.models.environments.llm import LLMEnvironmentConfig
 
 
 logger = logging.getLogger(__name__)

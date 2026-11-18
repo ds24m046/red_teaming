@@ -2,10 +2,10 @@ import unittest
 from unittest.mock import MagicMock, patch
 
 from red_teaming.gym.enums import DiscussionStyle
-from red_teaming.gym.configs.environments.eddi import EddiEnvironmentConfig
-from red_teaming.gym.configs.components.agent import AgentConfig, LLMConfig, ProtectionsConfig
-from red_teaming.gym.configs.components.group import GroupConfig, GroupMemberConfig
-from red_teaming.gym.configs.components.secret import SecretConfig
+from red_teaming.gym.configs.models.environments.eddi import EddiEnvironmentConfig
+from red_teaming.gym.configs.models.components.agent import AgentConfig, LLMConfig, ProtectionsConfig
+from red_teaming.gym.configs.models.components.group import GroupConfig, GroupMemberConfig
+from red_teaming.gym.configs.models.components.secret import SecretConfig
 from red_teaming.gym.src.environments.eddi import EddiEnvironment
 
 

@@ -2,7 +2,7 @@ import os
 from openai import AzureOpenAI
 
 from red_teaming.gym.base import BaseServer
-from red_teaming.gym.configs.servers.llm import LLMServerConfig
+from red_teaming.gym.configs.models.servers.llm import LLMServerConfig
 
 
 class LLMServer(BaseServer):

@@ -1,7 +1,7 @@
 from pydantic import Field
 
 from red_teaming.gym.base import BaseConfig
-from red_teaming.gym.configs.servers.llm import LLMServerConfig
+from red_teaming.gym.configs.models.servers.llm import LLMServerConfig
 
 
 class LLMEnvironmentConfig(BaseConfig):

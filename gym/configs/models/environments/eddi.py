@@ -3,10 +3,10 @@ from pydantic import Field, model_validator
 
 from red_teaming.gym.enums import Profile
 from red_teaming.gym.base import BaseConfig
-from red_teaming.gym.configs.servers.eddi import EddiServerConfig
-from red_teaming.gym.configs.components.agent import AgentConfig
-from red_teaming.gym.configs.components.group import GroupConfig
-from red_teaming.gym.configs.components.secret import SecretConfig
+from red_teaming.gym.configs.models.servers.eddi import EddiServerConfig
+from red_teaming.gym.configs.models.components.agent import AgentConfig
+from red_teaming.gym.configs.models.components.group import GroupConfig
+from red_teaming.gym.configs.models.components.secret import SecretConfig
 
 
 class EddiEnvironmentConfig(BaseConfig):

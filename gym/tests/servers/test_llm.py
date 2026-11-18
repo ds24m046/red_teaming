@@ -2,7 +2,7 @@ import os
 import unittest
 from unittest.mock import patch, MagicMock
 
-from red_teaming.gym.configs.servers.llm import LLMServerConfig
+from red_teaming.gym.configs.models.servers.llm import LLMServerConfig
 from red_teaming.gym.src.servers.llm import LLMServer
 
 

@@ -3,7 +3,7 @@ import subprocess
 from httpx import Client, TransportError
 
 from red_teaming.gym.base import BaseServer
-from red_teaming.gym.configs.environments.eddi import EddiServerConfig
+from red_teaming.gym.configs.models.environments.eddi import EddiServerConfig
 
 
 class EddiServer(BaseServer):

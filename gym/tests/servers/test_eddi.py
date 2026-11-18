@@ -3,7 +3,7 @@ from pathlib import Path
 from httpx import TransportError
 from unittest.mock import MagicMock, patch
 
-from red_teaming.gym.configs.servers.eddi import EddiServerConfig
+from red_teaming.gym.configs.models.servers.eddi import EddiServerConfig
 from red_teaming.gym.src.servers.eddi import EddiServer
 
 

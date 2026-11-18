@@ -1,7 +1,7 @@
 import unittest
 from unittest.mock import MagicMock, patch
 
-from red_teaming.gym.configs.environments.llm import LLMEnvironmentConfig
+from red_teaming.gym.configs.models.environments.llm import LLMEnvironmentConfig
 from red_teaming.gym.src.environments.llm import LLMEnvironment
 
 

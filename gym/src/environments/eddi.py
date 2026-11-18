@@ -8,10 +8,10 @@ from red_teaming.gym.src.servers.eddi import EddiServer
 from red_teaming.gym.src.sessions.agent import AgentSession
 from red_teaming.gym.src.sessions.group import GroupSession
 from red_teaming.gym.base import BaseEnvironment, BaseSession
-from red_teaming.gym.configs.environments.eddi import EddiEnvironmentConfig
-from red_teaming.gym.configs.components.agent import AgentConfig
-from red_teaming.gym.configs.components.group import GroupConfig
-from red_teaming.gym.configs.components.secret import SecretConfig
+from red_teaming.gym.configs.models.environments.eddi import EddiEnvironmentConfig
+from red_teaming.gym.configs.models.components.agent import AgentConfig
+from red_teaming.gym.configs.models.components.group import GroupConfig
+from red_teaming.gym.configs.models.components.secret import SecretConfig
 
 
 logger = logging.getLogger(__name__)
