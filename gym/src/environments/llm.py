@@ -37,10 +37,7 @@ class LLMEnvironment(BaseEnvironment):
 
         return self
     
-    def chat(self, target: str) -> LLMSession:
-        
-        if target != self._id:
-            raise ValueError(f"Unknown target: {target}")
+    def chat(self, target: str = "llm") -> LLMSession:
         
         session = LLMSession(
             self.server.client,

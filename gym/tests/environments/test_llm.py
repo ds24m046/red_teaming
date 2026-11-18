@@ -63,17 +63,7 @@ class TestLLMEnvironment(unittest.TestCase):
             self.config.system_prompt,
         )
         self.assertIn(session, self.env._sessions)
-
-    def test_chat_rejects_unknown_target(self):
-        self.env._id = "valid-id"
-
-        with self.assertRaisesRegex(ValueError, "Unknown target"):
-            self.env.chat("invalid-id")
-
-    def test_chat_before_create(self):
-        with self.assertRaisesRegex(ValueError, "Unknown target"):
-            self.env.chat("some-id")
-
+    
     @patch(f"{MODULE}.LLMServer")
     def test_close(self, server_class):
         server = server_class.return_value
